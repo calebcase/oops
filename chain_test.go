@@ -52,6 +52,19 @@ func opencloseP() (err error) {
 	return oops.New("openclose error")
 }
 
+func opencloseLaterP() (err error) {
+	ctx := context.Background()
+
+	f, err := open()
+	if err != nil {
+		return err
+	}
+	//defer oops.ChainP(&err, defer f.Close(ctx))
+	defer oops.ChainP(&err, oops.Later(f.Close, ctx))
+
+	return oops.New("openclose error")
+}
+
 func TestChain(t *testing.T) {
 	t.Run("Chain", func(t *testing.T) {
 		err := openclose()
@@ -70,6 +83,17 @@ func TestChain(t *testing.T) {
 
 	t.Run("ChainP", func(t *testing.T) {
 		err := opencloseP()
+		werr := errors.Unwrap(err)
+
+		t.Logf("error: %T\n%+v\n", err, err)
+		require.Error(t, err)
+
+		t.Logf("wrapped error: %T\n%+v\n", werr, werr)
+		require.Error(t, werr)
+	})
+
+	t.Run("ChainLaterP", func(t *testing.T) {
+		err := opencloseLaterP()
 		werr := errors.Unwrap(err)
 
 		t.Logf("error: %T\n%+v\n", err, err)
