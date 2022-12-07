@@ -88,6 +88,14 @@ func Chain(errs ...error) error {
 		ce = append(ce, err)
 	}
 
+	if len(ce) == 0 {
+		return nil
+	}
+
+	if len(ce) == 1 {
+		return ce[0]
+	}
+
 	return ce
 }
 
