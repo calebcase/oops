@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/calebcase/oops/lines"
 )
 
 // Namespace provides a name prefix for new errors.
@@ -74,13 +76,16 @@ func (ne *NamespaceError) Format(f fmt.State, verb rune) {
 		return
 	}
 
-	lines := ErrorLines(ne.Err, "%"+flag+string(verb))
+	output := []string{}
+	ls := lines.Sprintf("%"+flag+string(verb), ne.Err)
 
-	fmt.Fprintf(f, "%s: %s\n", ne.Name, lines[0])
+	output = append(output, fmt.Sprintf("%s: %s", ne.Name, ls[0]))
 
-	if len(lines) > 1 {
-		f.Write([]byte(strings.Join(lines[1:], "\n")))
+	if len(ls) > 1 {
+		output = append(output, ls[1:]...)
 	}
+
+	f.Write([]byte(strings.Join(output, "\n")))
 }
 
 // MarshalJSON implements json.Marshaler.

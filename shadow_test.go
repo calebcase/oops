@@ -21,6 +21,7 @@ func TestShadow(t *testing.T) {
 	require.Error(t, err)
 
 	t.Logf("err: %v\n", err)
+	t.Logf("err: %+v\n", err)
 
 	se := err.(*oops.ShadowError)
 	require.Equal(t, ErrShadow, se.Err)

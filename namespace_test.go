@@ -19,6 +19,7 @@ func TestNamespace(t *testing.T) {
 	err := namespaceFunc()
 	require.Error(t, err)
 
+	t.Logf("%v\n", err)
 	t.Logf("%+v\n", err)
 
 	ne := err.(*oops.NamespaceError)

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/calebcase/oops/lines"
 )
 
 // ShadowError is an error with a hidden error inside.
@@ -48,9 +50,8 @@ func (se *ShadowError) Format(f fmt.State, verb rune) {
 		return
 	}
 
-	output := ErrorIndent(se.Err, "%"+flag+string(verb), "··")
-
-	hidden := ErrorIndent(se.Hidden, "%"+flag+string(verb), "··")
+	output := lines.Indent(lines.Sprintf("%"+flag+string(verb), se.Err), "··", 1)
+	hidden := lines.Indent(lines.Sprintf("%"+flag+string(verb), se.Hidden), "··", 1)
 
 	output = append(output, "··hidden: "+hidden[0])
 
@@ -59,9 +60,6 @@ func (se *ShadowError) Format(f fmt.State, verb rune) {
 	}
 
 	fmt.Fprintf(f, strings.Join(output, "\n"))
-
-	//fmt.Fprintf(f, "%"+flag+string(verb)+":\n", se.Err)
-	//fmt.Fprintf(f, "  %"+flag+string(verb)+"\n", se.Hidden)
 }
 
 // MarshalJSON implements json.Marshaler.
