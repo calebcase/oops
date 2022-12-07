@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+
+	"github.com/calebcase/oops/lines"
 )
 
 // Capturer provides a method for capturing trace data.
@@ -12,26 +14,66 @@ type Capturer interface {
 	Capture(err error, skip int) (data any)
 }
 
-// Capture is used to capture trace data. By default it is configured to
-// capture stack frames.
-var Capture = func(_ error, skip int) (data any) {
+// CaptureFunc defines a Capturer that calls the given function to generate the
+// capture.
+type CaptureFunc[T any] func(error, int) T
+
+// Capture implements Capturer.
+func (cf CaptureFunc[T]) Capture(err error, skip int) any {
+	return cf(err, skip)
+}
+
+// Frames wraps []runtime.Frame to provide a custom stringer.
+type Frames []runtime.Frame
+
+// String returns the frames formatted as an numbered intended array of frames.
+func (fs Frames) String() string {
+	ls := []string{}
+
+	for i, f := range fs {
+		prefix := fmt.Sprintf("[%d] ", i)
+		ls = append(ls, prefix+f.Function)
+		ls = append(ls, strings.Repeat(" ", len(prefix))+fmt.Sprintf("%s:%d", f.File, f.Line))
+	}
+
+	return strings.Join(ls, "\n")
+}
+
+// CaptureRuntimeFrames returns the captured stack as []runtime.Frame.
+func CaptureRuntimeFrames(_ error, skip int) []runtime.Frame {
 	callers := make([]uintptr, 10)
 	n := runtime.Callers(skip, callers)
 	callers = callers[:n]
 
 	cfs := runtime.CallersFrames(callers)
 
-	frames := make([]runtime.Frame, 0, n)
+	fs := make([]runtime.Frame, 0, n)
 	for {
-		frame, more := cfs.Next()
+		f, more := cfs.Next()
 		if !more {
 			break
 		}
 
-		frames = append(frames, frame)
+		fs = append(fs, f)
 	}
 
-	return frames
+	return fs
+}
+
+// CaptureFrames returns the captured stack as Frames.
+func CaptureFrames(err error, skip int) (data Frames) {
+	return Frames(CaptureRuntimeFrames(err, skip))
+}
+
+// defaultCapturer is the package level setting for the capture function. This
+// is what will be used if no trace options are provided.
+var defaultCapturer Capturer = CaptureFunc[Frames](CaptureFrames)
+
+// SetDefaultCapturer changes the default trace capturer used by calls to
+// Trace, TraceN, and TraceWithOptions. The default capturer creates a capture
+// using CaptureFrames.
+func SetDefaultCapturer(c Capturer) {
+	defaultCapturer = c
 }
 
 // TraceError is an error with trace data.
@@ -75,12 +117,11 @@ func (te *TraceError) Format(f fmt.State, verb rune) {
 		return
 	}
 
-	output := ErrorIndent(te.Err, "%"+flag+string(verb), "··")
+	output := []string{}
+	output = append(output, lines.Indent(lines.Sprintf("%"+flag+string(verb), te.Err), "··", 1)...)
+	output = append(output, lines.Indent(lines.Sprintf("%"+flag+string(verb), te.Data), "··", 0)...)
 
 	f.Write([]byte(strings.Join(output, "\n")))
-
-	// TODO: Indent?
-	fmt.Fprintf(f, "%"+flag+string(verb), te.Data)
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -137,13 +178,12 @@ func TraceWithOptions(err error, options TraceOptions) *TraceError {
 		return nil
 	}
 
-	capture := Capture
-	if options.Capturer != nil {
-		capture = options.Capturer.Capture
+	if options.Capturer == nil {
+		options.Capturer = defaultCapturer
 	}
 
 	return &TraceError{
-		Data: capture(err, options.Skip),
+		Data: options.Capturer.Capture(err, options.Skip),
 		Err:  err,
 	}
 }

@@ -1,2 +1,2 @@
-// Package oops implements the batteries missing from Package errors.
+// Package oops implements the batteries that are missing from the errors package.
 package oops

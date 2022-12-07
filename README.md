@@ -3,7 +3,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/calebcase/oops.svg)](https://pkg.go.dev/github.com/calebcase/oops)
 [![Go Report Card](https://goreportcard.com/badge/github.com/calebcase/oops)](https://goreportcard.com/report/github.com/calebcase/oops)
 
-Oops implements the batteries that are missing from [errors][errors]:
+Oops implements the batteries that are missing from the [errors package][errors]:
 
 * Stack traces: attach a stack trace to any error
 * Chaining: combining multiple errors into a single stack of errors (as you

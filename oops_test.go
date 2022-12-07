@@ -1,12 +1,12 @@
 package oops_test
 
 import (
-	"testing"
+	"fmt"
 
 	"github.com/calebcase/oops"
 )
 
-func TestNew(t *testing.T) {
+func ExampleNew() {
 	a := func() error {
 		return oops.New("bad stuff")
 	}
@@ -21,5 +21,24 @@ func TestNew(t *testing.T) {
 
 	err := c()
 
-	t.Logf("error: %v\n", err)
+	fmt.Printf("error: %v\n", err)
+	// Output: error: bad stuff
+}
+
+func ExampleNew_details() {
+	a := func() error {
+		return oops.New("bad stuff")
+	}
+
+	b := func() error {
+		return a()
+	}
+
+	c := func() error {
+		return b()
+	}
+
+	err := c()
+
+	fmt.Printf("error: %+v\n", err)
 }

@@ -3,6 +3,8 @@ package oops
 import (
 	"fmt"
 	"strings"
+
+	"github.com/calebcase/oops/lines"
 )
 
 // ChainError is a list of errors oldest to newest.
@@ -46,9 +48,9 @@ func (ce ChainError) Format(f fmt.State, verb rune) {
 
 	errs := make([]string, 0, len(ce))
 
-	fmt.Fprintf(f, "chain:\n")
+	fmt.Fprintf(f, "chain(len=%d):\n", len(ce))
 	for i, err := range ce {
-		lines := ErrorIndent(err, "%"+flag+string(verb), "··")
+		lines := lines.Indent(lines.Sprintf("%"+flag+string(verb), err), "··", 1)
 
 		errs = append(errs, fmt.Sprintf("··[%d] %s", i, lines[0]))
 
