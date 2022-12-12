@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var Error = oops.Namespace{"oops_test"}
+var Error = oops.Namespace("oops_test")
 
 func namespaceFunc() (err error) {
 	defer Error.NewP(&err)
@@ -23,5 +23,5 @@ func TestNamespace(t *testing.T) {
 	t.Logf("%+v\n", err)
 
 	ne := err.(*oops.NamespaceError)
-	require.Equal(t, Error.Name, ne.Name)
+	require.Equal(t, string(Error), ne.Name)
 }

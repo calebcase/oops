@@ -9,9 +9,7 @@ import (
 )
 
 // Namespace provides a name prefix for new errors.
-type Namespace struct {
-	Name string
-}
+type Namespace string
 
 // New returns the error wrapped in the namespace.
 func (n Namespace) New(err error) *NamespaceError {
@@ -20,7 +18,7 @@ func (n Namespace) New(err error) *NamespaceError {
 	}
 
 	return &NamespaceError{
-		Name: n.Name,
+		Name: string(n),
 		Err:  err,
 	}
 }
