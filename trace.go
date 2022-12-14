@@ -87,17 +87,13 @@ func (te *TraceError) Error() string {
 	return fmt.Sprintf("%v", te)
 }
 
-// Error implements errors.Unwraper.
+// Unwrap implements the implied interface for errors.Unwrap.
 func (te *TraceError) Unwrap() error {
 	if te == nil || te.Err == nil {
 		return nil
 	}
 
-	if uw, ok := te.Err.(unwrapper); ok {
-		return uw.Unwrap()
-	}
-
-	return nil
+	return te.Err
 }
 
 // Format implements fmt.Format.

@@ -1,6 +1,7 @@
 package oops
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -13,20 +14,40 @@ type ChainError []error
 var _ error = ChainError{}
 var _ unwrapper = ChainError{}
 
+// Error implements the implied interface for error.
 func (ce ChainError) Error() string {
 	return fmt.Sprintf("%v", ce)
 }
 
+// Unwrap implements the implied interface for errors.Unwrap.
 func (ce ChainError) Unwrap() error {
-	if len(ce) == 0 || len(ce) == 1 {
+	if len(ce) == 0 {
 		return nil
 	}
 
-	if len(ce) == 2 {
-		return ce[1]
+	if len(ce) == 1 {
+		return ce[0]
 	}
 
 	return ChainError(ce[1:])
+}
+
+// Is implements the implied interface for errors.Is.
+func (ce ChainError) Is(err error) bool {
+	if len(ce) == 0 {
+		return false
+	}
+
+	return errors.Is(ce[0], err)
+}
+
+// As implements the implied interface for errors.As.
+func (ce ChainError) As(target any) bool {
+	if len(ce) == 0 {
+		return false
+	}
+
+	return errors.As(ce[0], target)
 }
 
 // Format implements fmt.Format.

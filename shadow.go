@@ -26,11 +26,7 @@ func (se *ShadowError) Unwrap() error {
 		return nil
 	}
 
-	if un, ok := se.Err.(interface{ Unwrap() error }); ok {
-		return un.Unwrap()
-	}
-
-	return nil
+	return se.Err
 }
 
 // Format implements fmt.Format.
@@ -85,7 +81,7 @@ func (se *ShadowError) MarshalJSON() (bs []byte, err error) {
 }
 
 // Shadow hides internal errors with another error.
-func Shadow(hidden, err error) error {
+func Shadow(hidden, err error) *ShadowError {
 	if hidden == nil || err == nil {
 		return nil
 	}
