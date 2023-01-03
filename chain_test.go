@@ -161,7 +161,15 @@ func TestChain(t *testing.T) {
 
 		for _, tc := range tcs {
 			t.Run(fmt.Sprintf("%s", tc.Errs), func(t *testing.T) {
-				require.Equal(t, tc.Expect, oops.Chain(tc.Errs...))
+				t.Run("Chain", func(t *testing.T) {
+					require.Equal(t, tc.Expect, oops.Chain(tc.Errs...))
+				})
+
+				t.Run("ChainP", func(t *testing.T) {
+					var err error
+					oops.ChainP(&err, tc.Errs...)
+					require.Equal(t, tc.Expect, err)
+				})
 			})
 		}
 	})

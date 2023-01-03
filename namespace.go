@@ -12,7 +12,7 @@ import (
 type Namespace string
 
 // New returns the error wrapped in the namespace.
-func (n Namespace) New(err error) *NamespaceError {
+func (n Namespace) New(err error) error {
 	if err == nil {
 		return nil
 	}
@@ -60,6 +60,8 @@ func (ne *NamespaceError) Unwrap() error {
 // Format implements fmt.Format.
 func (ne *NamespaceError) Format(f fmt.State, verb rune) {
 	if ne == nil || ne.Err == nil {
+		fmt.Fprintf(f, "<nil>")
+
 		return
 	}
 

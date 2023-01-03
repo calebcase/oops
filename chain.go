@@ -53,6 +53,8 @@ func (ce ChainError) As(target any) bool {
 // Format implements fmt.Format.
 func (ce ChainError) Format(f fmt.State, verb rune) {
 	if len(ce) == 0 {
+		fmt.Fprintf(f, "<nil>")
+
 		return
 	}
 
@@ -85,14 +87,6 @@ func (ce ChainError) Format(f fmt.State, verb rune) {
 
 // Chain combines errors into a chain of errors. nil errors are removed.
 func Chain(errs ...error) error {
-	if len(errs) == 0 {
-		return nil
-	}
-
-	if len(errs) == 1 {
-		return errs[0]
-	}
-
 	ce := ChainError{}
 
 	for _, err := range errs {

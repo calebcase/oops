@@ -32,6 +32,8 @@ func (se *ShadowError) Unwrap() error {
 // Format implements fmt.Format.
 func (se *ShadowError) Format(f fmt.State, verb rune) {
 	if se == nil || se.Err == nil || se.Hidden == nil {
+		fmt.Fprintf(f, "<nil>")
+
 		return
 	}
 
@@ -81,7 +83,7 @@ func (se *ShadowError) MarshalJSON() (bs []byte, err error) {
 }
 
 // Shadow hides internal errors with another error.
-func Shadow(hidden, err error) *ShadowError {
+func Shadow(hidden, err error) error {
 	if hidden == nil || err == nil {
 		return nil
 	}

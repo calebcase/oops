@@ -99,6 +99,8 @@ func (te *TraceError) Unwrap() error {
 // Format implements fmt.Format.
 func (te *TraceError) Format(f fmt.State, verb rune) {
 	if te == nil || te.Err == nil {
+		fmt.Fprintf(f, "<nil>")
+
 		return
 	}
 
@@ -145,14 +147,14 @@ func (te *TraceError) MarshalJSON() (bs []byte, err error) {
 }
 
 // Trace captures a trace and combines it with err. Tracer is use to capture
-// the trace data and 2 levels are skipped.
-func Trace(err error) *TraceError {
-	return TraceN(err, 2)
+// the trace data and internal stacks are skipped.
+func Trace(err error) error {
+	return TraceN(err, 7)
 }
 
 // TraceN captures a trace and combines it with err. Capturer is use to capture
 // the trace data with skipped levels.
-func TraceN(err error, skip int) *TraceError {
+func TraceN(err error, skip int) error {
 	return TraceWithOptions(err, TraceOptions{
 		Skip: skip,
 	})
@@ -169,7 +171,7 @@ type TraceOptions struct {
 }
 
 // TraceWithOptions captures a trace using the given options.
-func TraceWithOptions(err error, options TraceOptions) *TraceError {
+func TraceWithOptions(err error, options TraceOptions) error {
 	if err == nil {
 		return nil
 	}
