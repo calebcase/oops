@@ -1,18 +1,14 @@
 package oops
 
-import (
-	"encoding/json"
-	"fmt"
-	"strings"
-
-	"github.com/calebcase/oops/lines"
-)
+import "fmt"
 
 // Namespace provides a name prefix for new errors.
 type Namespace string
 
-// New returns the error wrapped in the namespace.
-func (n Namespace) New(err error) error {
+var _ Namespacer = Namespace("")
+
+// Wrap returns the error wrapped in the namespace.
+func (n Namespace) Wrap(err error) error {
 	if err == nil {
 		return nil
 	}
@@ -23,89 +19,69 @@ func (n Namespace) New(err error) error {
 	}
 }
 
-// NewP replaces err with a namespaced error.
-func (n Namespace) NewP(err *error) {
+// WrapP replaces the error with one wrapped in the namespace.
+func (n Namespace) WrapP(err *error) {
 	if err == nil || *err == nil {
 		return
 	}
 
-	*err = n.New(*err)
+	*err = n.Wrap(*err)
 }
 
-// NamespaceError prefixes errors with the given namespace.
-type NamespaceError struct {
-	Name string
-	Err  error
+func (n Namespace) New(format string, a ...any) error {
+	return n.Wrap(TraceN(fmt.Errorf(format, a...), TraceSkipInternal))
 }
 
-var _ error = &NamespaceError{}
-var _ unwrapper = &NamespaceError{}
-
-func (ne *NamespaceError) Error() string {
-	if ne == nil || ne.Err == nil {
-		return ""
-	}
-
-	return ne.Name + ": " + ne.Err.Error()
+func (n Namespace) Trace(err error) error {
+	return n.Wrap(TraceN(err, TraceSkipInternal))
 }
 
-func (ne *NamespaceError) Unwrap() error {
-	if ne == nil {
-		return nil
-	}
-
-	return ne.Err
+func (n Namespace) TraceN(err error, skip int) error {
+	return n.Wrap(TraceN(err, skip))
 }
 
-// Format implements fmt.Format.
-func (ne *NamespaceError) Format(f fmt.State, verb rune) {
-	if ne == nil || ne.Err == nil {
-		fmt.Fprintf(f, "<nil>")
-
-		return
-	}
-
-	flag := ""
-	if f.Flag(int('+')) {
-		flag = "+"
-	}
-
-	if flag == "" {
-		fmt.Fprintf(f, "%s: %"+string(verb), ne.Name, ne.Err)
-
-		return
-	}
-
-	output := []string{}
-	ls := lines.Sprintf("%"+flag+string(verb), ne.Err)
-
-	output = append(output, fmt.Sprintf("%s: %s", ne.Name, ls[0]))
-
-	if len(ls) > 1 {
-		output = append(output, ls[1:]...)
-	}
-
-	f.Write([]byte(strings.Join(output, "\n")))
+func (n Namespace) TraceWithOptions(err error, options TraceOptions) error {
+	return n.Wrap(TraceWithOptions(err, options))
 }
 
-// MarshalJSON implements json.Marshaler.
-func (ne *NamespaceError) MarshalJSON() (bs []byte, err error) {
-	if ne == nil || ne.Err == nil {
-		return []byte("null"), nil
-	}
+func (n Namespace) Chain(errs ...error) error {
+	return n.Wrap(Chain(errs...))
+}
 
-	ebs, err := ErrorMarshalJSON(ne.Err)
-	if err != nil {
-		return nil, err
-	}
+func (n Namespace) ChainP(err *error, errs ...error) {
+	ChainP(err, errs...)
+	n.WrapP(err)
+}
 
-	output := struct {
-		Type string          `json:"type"`
-		Err  json.RawMessage `json:"err"`
-	}{
-		Type: fmt.Sprintf("%T", ne.Err),
-		Err:  json.RawMessage(ebs),
-	}
+func (n Namespace) Shadow(hidden, err error) error {
+	return n.Wrap(Shadow(hidden, err))
+}
 
-	return json.Marshal(output)
+func (n Namespace) ShadowP(hidden *error, err error) {
+	ShadowP(hidden, err)
+	n.WrapP(hidden)
+}
+
+func (n Namespace) ShadowF(hidden *error, err error) func() {
+	return func() {
+		n.ShadowP(hidden, err)
+	}
+}
+
+type Namespacer interface {
+	Wrap(err error) error
+	WrapP(err *error)
+
+	New(format string, a ...any) error
+
+	Trace(err error) error
+	TraceN(err error, skip int) error
+	TraceWithOptions(err error, options TraceOptions) error
+
+	Chain(errs ...error) error
+	ChainP(err *error, errs ...error)
+
+	Shadow(hidden, err error) error
+	ShadowP(hidden *error, err error)
+	ShadowF(hidden *error, err error) func()
 }

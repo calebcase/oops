@@ -52,7 +52,7 @@ func TestCustomError(t *testing.T) {
 	t.Run("namespace", func(t *testing.T) {
 		ns := oops.Namespace("test")
 		cerr := NewCustomError("custom")
-		err := ns.New(cerr)
+		err := ns.Wrap(cerr)
 
 		ce := &CustomError{}
 		require.ErrorIs(t, err, cerr)

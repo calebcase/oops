@@ -9,6 +9,11 @@ import (
 	"github.com/calebcase/oops/lines"
 )
 
+// TraceSkipInternal is the number of frames created by internal oops calls.
+// This is the number of frames to skip if you would like to only include
+// frames up til the site where TraceN is called.
+const TraceSkipInternal = 7
+
 // Capturer provides a method for capturing trace data.
 type Capturer interface {
 	Capture(err error, skip int) (data any)
@@ -149,13 +154,13 @@ func (te *TraceError) MarshalJSON() (bs []byte, err error) {
 // Trace captures a trace and combines it with err. Tracer is use to capture
 // the trace data and internal stacks are skipped.
 func Trace(err error) error {
-	return TraceN(err, 7)
+	return TraceN(err, TraceSkipInternal)
 }
 
 // TraceN captures a trace and combines it with err. Capturer is use to capture
 // the trace data with skipped levels.
 func TraceN(err error, skip int) error {
-	return TraceWithOptions(err, TraceOptions{
+	return traceWithOptions(err, TraceOptions{
 		Skip: skip,
 	})
 }
@@ -172,6 +177,13 @@ type TraceOptions struct {
 
 // TraceWithOptions captures a trace using the given options.
 func TraceWithOptions(err error, options TraceOptions) error {
+	return traceWithOptions(err, options)
+}
+
+// traceWithOptions is necessary to match the number of stack frames for
+// TraceWithOptions to the other public function such that TraceSkipInternal
+// works for all functions.
+func traceWithOptions(err error, options TraceOptions) error {
 	if err == nil {
 		return nil
 	}
