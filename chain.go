@@ -11,8 +11,10 @@ import (
 // ChainError is a list of errors oldest to newest.
 type ChainError []error
 
-var _ error = ChainError{}
-var _ unwrapper = ChainError{}
+var (
+	_ error     = ChainError{}
+	_ unwrapper = ChainError{}
+)
 
 // Error implements the implied interface for error.
 func (ce ChainError) Error() string {

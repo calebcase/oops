@@ -77,7 +77,7 @@ func namespaceShadowF() (err error) {
 }
 
 func TestNamespace(t *testing.T) {
-	tcs := []struct{
+	tcs := []struct {
 		Fn func() error
 	}{
 		{Fn: namespaceWrap},

@@ -14,8 +14,10 @@ type NamespaceError struct {
 	Err  error
 }
 
-var _ error = &NamespaceError{}
-var _ unwrapper = &NamespaceError{}
+var (
+	_ error     = &NamespaceError{}
+	_ unwrapper = &NamespaceError{}
+)
 
 func (ne *NamespaceError) Error() string {
 	if ne == nil || ne.Err == nil {

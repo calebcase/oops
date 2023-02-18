@@ -14,8 +14,10 @@ type ShadowError struct {
 	Err    error `json:"err"`
 }
 
-var _ error = &ShadowError{}
-var _ unwrapper = &ShadowError{}
+var (
+	_ error     = &ShadowError{}
+	_ unwrapper = &ShadowError{}
+)
 
 func (se *ShadowError) Error() string {
 	return fmt.Sprintf("%v", se)
