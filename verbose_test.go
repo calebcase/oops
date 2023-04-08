@@ -21,4 +21,6 @@ func TestVerbose(t *testing.T) {
 
 	vflines := len(strings.Split(fmt.Sprintf("%v", verr), "\n"))
 	require.Greater(t, vflines, 1)
+
+	require.Nil(t, oops.Verbose(nil))
 }

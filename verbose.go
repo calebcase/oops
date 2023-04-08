@@ -25,6 +25,10 @@ func (ve *VerboseError) Unwrap() error {
 
 // Verbose wraps an error making its string output verbose ("%+v").
 func Verbose(err error) error {
+	if err == nil {
+		return nil
+	}
+
 	return &VerboseError{
 		Err: err,
 	}
