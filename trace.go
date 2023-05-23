@@ -44,12 +44,30 @@ func (fs Frames) String() string {
 	return strings.Join(ls, "\n")
 }
 
+// CaptureRuntimeFramesChunk is the initial and additional amount of frames
+// gathered in CaptureRuntimeFrames. When there are more than this many frames
+// to capture the frame buffer will be reallocated with this much additional
+// space (repeating until all frames are able to be captured).
+var CaptureRuntimeFramesChunk = 64
+
 // CaptureRuntimeFrames returns the captured stack as []runtime.Frame.
 func CaptureRuntimeFrames(_ error, skip int) []runtime.Frame {
-	callers := make([]uintptr, 10)
-	n := runtime.Callers(skip, callers)
+	// Attempt to gather the callers. If it is truncated, then increase the
+	// size of our buffer and try again.
+	callers := make([]uintptr, CaptureRuntimeFramesChunk)
+
+	var n int
+	for {
+		n = runtime.Callers(skip, callers)
+		if n < len(callers) {
+			break
+		}
+		callers = make([]uintptr, len(callers)+CaptureRuntimeFramesChunk)
+	}
+
 	callers = callers[:n]
 
+	// Convert the callers to runtime.Frames.
 	cfs := runtime.CallersFrames(callers)
 
 	fs := make([]runtime.Frame, 0, n)
